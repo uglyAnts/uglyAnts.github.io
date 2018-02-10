@@ -132,3 +132,155 @@ module.exports = function() {
 
     return config;
 }();
+module.exports = function(grunt) {
+    grunt.initConfig({
+        pkg:grunt.file.readJSON('package.json'),
+
+        concat: {
+            options: {
+                separator: ';',
+                stripBanners: true,
+                banner: '/*********\n项目名称：<%= pkg.name %>\n版本号：<%= pkg.version %>\n*********/\n'
+            },
+            dist: {
+                files: {
+                    'dist/common.js': ['src/vendor.bundle.js','src/app.bundle.js']
+                }
+            }
+        },
+
+        connect: {
+            options: {
+                port: 9000,
+                hostname: 'localhost',
+                livereload: 35729
+            },
+            server: {
+                options: {
+                    base: 'dist',
+                    open:true
+                }
+            }
+        },
+
+        less: {
+            dist: {
+                options: {
+                    compress: true
+                },
+                files: [{
+                    expand: true,
+                    cwd: 'src',
+                    src: ['**/*.less'],
+                    dest: 'dist',
+                    ext: '.css'
+                }]
+            }
+        },
+
+        jshint: {
+            files: ['src/**/*.js'],
+            options: {
+                globals: {
+                    jQuery: true,
+                    console: true,
+                    module: true,
+                    document: true
+                }
+            }
+        },
+
+        copy: {
+            target: {
+                files: [{
+                    expand: true,
+                    cwd: 'src',
+                    src: [
+                    '*.jpg', '**/*.jpg',
+                    '*.gif', '**/*.gif',
+                    '*.png', '**/*.png'],
+                    dest: 'dist'
+                }]
+            }
+        },
+
+        htmlmin: {
+            all: {
+                options: {
+                    removeComments: true,
+                    collapseWhitespace: true
+                },
+                files: [{
+                    expand: true,
+                    cwd: 'src',
+                    src: ['**/*.html','**/*.htm','**/*.ftl'],
+                    dest: 'dist'
+                }]
+            }
+        },
+
+        uglify: {
+            options: {
+                // banner: '/* <%= pkg.name %> <%= grunt.template.today("dd-mm-yyyy") %> */'
+                ie8:true
+            },
+            dist: {
+                files: [{
+                    expand: true,
+                    cwd: 'src',
+                    src: ['**/*.js','!*.min.js'],
+                    dest: 'dist',
+                    ext: '.js'
+                }]
+            }
+        },
+
+        coffee: {
+            files: {
+                expand: true,
+                flatten: true,
+                cwd: 'src',
+                src: ['**/*.coffee'],
+                dest: 'dist',
+                ext: '.js'
+            }
+        },
+
+        watch: {
+            livereload: {
+                options: {
+                    livereload: '<%= connect.options.livereload %>'
+                },
+                files: ['src/**/*'],
+            },
+            scripts: {
+                files: ['src/**/*.coffee'],
+                tasks: ['coffee']
+            },
+            less: {
+                files: ['src/**/*.less'],
+                tasks: ['less']
+            },
+            html: {
+                files: ['src/**/*.html'],
+                tasks: ['htmlmin']
+            }
+        }
+    });
+
+    grunt.loadNpmTasks('grunt-contrib-concat');
+    grunt.loadNpmTasks('grunt-contrib-jshint');
+    grunt.loadNpmTasks('grunt-contrib-watch');
+    grunt.loadNpmTasks('grunt-contrib-connect');
+    grunt.loadNpmTasks('grunt-contrib-htmlmin');
+    grunt.loadNpmTasks('grunt-contrib-copy');
+    grunt.loadNpmTasks('grunt-contrib-less');
+    grunt.loadNpmTasks('grunt-contrib-uglify');
+    grunt.loadNpmTasks('grunt-contrib-coffee');
+
+    grunt.registerTask('dev', ['copy','concat','less','htmlmin','connect','watch']);
+
+    // grunt.registerTask('dev', ['jshint','copy','concat','uglify','less','htmlmin','connect','watch']);
+
+    grunt.registerTask('build', ['jshint','copy','concat','uglify','htmlmin']);
+};
